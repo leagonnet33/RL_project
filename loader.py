@@ -19,8 +19,10 @@ class TradingDataLoader():
         '''
         path = f"./data/{filename}.csv"
         df = pd.read_csv(path)
-        df = df.sort_values("date")
-        return df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+        df.drop(labels=["unix", "symbol"], axis=1, inplace=True)
+        df.sort_values("date", inplace=True)
+        df.set_index("date", inplace=True)
+        return df.loc[start_date:end_date]
 
     def data(self):
         ''' A public method that returns the loaded data set
