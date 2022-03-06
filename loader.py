@@ -4,7 +4,7 @@ class TradingDataLoader():
     '''
     A class to load our trading data in a pandas data frame
     '''
-    def __init__(self, crypto_pair="ETH/USDT", time_step="hourly", start_date="2021-01-01 00:00:00", end_date="2021-01-01 23:00:00"):
+    def __init__(self, crypto_pair="ETH/USDT", time_step="hourly", start_date="2021-01-01 00:00:00", end_date="2021-12-31 23:00:00"):
         self.crypto_pair_ = crypto_pair
         self.time_step_ = time_step
         self.start_date_ = start_date
@@ -32,4 +32,5 @@ class TradingDataLoader():
 if __name__ == "__main__":
     dataloader = TradingDataLoader()
     data = dataloader.data()
-    print(data.head(5))
+    print(data.tail(5))
+    print(len(data))
