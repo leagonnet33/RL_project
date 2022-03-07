@@ -77,6 +77,14 @@ class Portfolio:
         sell_price = current_price * (1 - self.spread_)
         return self.portfolio_coin_ * sell_price + self.portfolio_cash_
 
+    def __get_returns_percent(self, current_price):
+        '''
+        A private method that return the returns since the experiment started
+        '''
+        if self.cash_used_ == 0.0:
+            return 0.0
+        return 100 * (self.__get_current_value(current_price) - self.cash_used_) / self.cash_used_
+
     def __buy(self, current_price):
         '''
         The private method that corresponds to buying cryptos
@@ -117,7 +125,7 @@ class Portfolio:
         self.portfolio_cash_ += coin_to_sell * sell_price
 
         if self.verbose_:
-            print(f"coin to sell: {coin_to_sell}, coin now: {self.portfolio_coin_}, cash now: {self.portfolio_cash_}, cash used now: {self.cash_used_}") 
+            print(f"coin to sell: {coin_to_sell}, coin now: {self.portfolio_coin_}, cash now: {self.portfolio_cash_}, cash used now: {self.cash_used_}")
  
         return coin_to_sell, sell_price
 
@@ -126,6 +134,8 @@ class Portfolio:
         A method to apply an action (either buy, sell or hold) to the portfolio and
         update the internal state after the action.
         '''
+        assert action in [0, 1, 2], "Action should be one of: 0, 1 or 2"
+
         self.state_dict_["total_value"] = self.__get_current_value(current_price)
 
         if self.verbose_:
@@ -160,8 +170,8 @@ class Portfolio:
         self.state_dict_["is_holding_coin"] = (self.portfolio_coin_ > 0) * 1
         self.state_dict_["return_since_entry"] = self.__get_returns_percent(current_price)
         
-        if self.verbose_:
-            print("Action end:", action, "Reward:", self.get_reward())
+        # if self.verbose_:
+        #     print("Action end:", action, "Reward:", self.get_reward())
             
         return action
 
@@ -177,26 +187,66 @@ class Portfolio:
         '''
         if not metrics:
             metrics = self.metrics_
-        return [self.state_dict_[metric] for metric in metrics]
+        return np.array([self.state_dict_[metric] for metric in metrics])
     
     def get_reward(self):
         '''
-        A method to return the reward
+        A method to return the reward.
+        THIS METHOD WILL PROBABLY BE USELESS.
         '''
         if self.cash_used_ == 0.0:
             return 0.0
         return (self.__get_current_value(self.final_price_) - self.cash_used_)/self.cash_used_
 
-    def __get_returns_percent(self, current_price):
-        '''
-        A private method that return the returns since the experiment started
-        '''
-        if self.cash_used_ == 0.0:
-            return 0.0
-        return 100 * (self.__get_current_value(current_price) - self.cash_used_) / self.cash_used_
-
     def get_current_holdings(self, current_price):
         '''
         A method that returns a string describing the current position of the portfolio
         '''
-        return f"{self.portfolio_coin_: .2f} coins, {self.portfolio_cash_: .2f} cash, {self.__get_current_value(current_price): .2f} current value, {self.__get_returns_percent(current_price): .2f} percent returns"
+        return f"{self.portfolio_coin_: .2f} coins, {self.portfolio_cash_: .2f} cash, {self.__get_current_value(current_price): .2f} current value, {self.__get_returns_percent(current_price): .2f}% returns"
+
+
+if __name__ == "__main__":
+    from loader import TradingDataLoader
+    from environments import TradingBotEnv
+
+    ## TEST PORTFOLIO METHODS ##
+    data = TradingDataLoader().data()
+    env = TradingBotEnv(data)
+
+    # portfolio.apply_action()
+    portfolio = Portfolio(verbose=True)
+    actions = [1, 1, 1, 0, 2, 0, 2, 1]
+    for action in actions:
+        current_price = env.get_current_price()
+        portfolio.apply_action(current_price, action)
+        _ = env.step()
+
+    # # portfolio.reset() and portfolio.get_current_holdings()
+    # portfolio = Portfolio(verbose=False)
+    # actions = [1, 1, 1, 0, 2, 0, 2, 1]
+    # for action in actions:
+    #     current_price = env.get_current_price()
+    #     portfolio.apply_action(current_price, action)
+    #     _ = env.step()
+    # portfolio.reset()
+    # env.reset()
+    # print(portfolio.get_current_holdings(env.get_current_price()))
+
+    # # portfolio.get_states()
+    # portfolio = Portfolio(verbose=False)
+    # actions = [1, 1, 1, 0, 2, 0, 2, 1]
+    # for action in actions:
+    #     current_price = env.get_current_price()
+    #     portfolio.apply_action(current_price, action)
+    #     _ = env.step()
+    # print(portfolio.get_states(metrics=METRICS))
+    # print(portfolio.get_states(metrics=["coin", "cash"]))
+
+    # # portfolio.get_current_holdings()
+    # portfolio = Portfolio(verbose=False)
+    # actions = [1, 1, 1, 0, 2, 0, 2, 1]
+    # for action in actions:
+    #     current_price = env.get_current_price()
+    #     portfolio.apply_action(current_price, action)
+    #     _ = env.step()
+    # print(portfolio.get_current_holdings(env.get_current_price()))
