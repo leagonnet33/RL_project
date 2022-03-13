@@ -100,6 +100,8 @@ class Portfolio:
 
         self.portfolio_coin_ += coin_to_buy
         self.cash_used_ += coin_to_buy * buy_price
+        self.portfolio_cash_ -= coin_to_buy * buy_price
+
 
         if self.verbose_:
             print(f"coin to buy: {coin_to_buy}, coin now: {self.portfolio_coin_}, cash now: {self.portfolio_cash_}, cash used now: {self.cash_used_}")
