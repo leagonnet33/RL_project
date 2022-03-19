@@ -49,11 +49,11 @@ class Portfolio:
     The portfolio object. It is part of the environment and describes what the agent owns
     at every time step, mainly.
     '''
-    def __init__(self, num_coins_per_order=1., metrics=METRICS, verbose=False, final_price=0.0, spread=SPREAD):
+    def __init__(self, portfolio_cash = 5000, num_coins_per_order=1., metrics=METRICS, verbose=False, final_price=0.0, spread=SPREAD):
         self.verbose_ = verbose
         self.final_price_ = final_price
         self.portfolio_coin_ = 0.0
-        self.portfolio_cash_ = 0.0
+        self.portfolio_cash_ = portfolio_cash
         self.num_coins_per_order_ = num_coins_per_order
         self.metrics_ = metrics
         
@@ -100,6 +100,7 @@ class Portfolio:
 
         self.portfolio_coin_ += coin_to_buy
         self.cash_used_ += coin_to_buy * buy_price
+        self.portfolio_cash_ -= coin_to_buy * buy_price
 
         if self.verbose_:
             print(f"coin to buy: {coin_to_buy}, coin now: {self.portfolio_coin_}, cash now: {self.portfolio_cash_}, cash used now: {self.cash_used_}")
