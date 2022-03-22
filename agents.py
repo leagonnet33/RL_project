@@ -1,32 +1,57 @@
-from environments import *
-from portfolio import *
-from loader import TradingDataLoader
-from random import *
-import numpy as np
 from utils import argmax
+import numpy as np
+
 
 class BaseAgent:
+    '''
+    The base agent class that needs to be overwritten.
+    Can be used as info as what methods an agent should have.
+    '''
     def agent_init(self, agent_info={}):
+        '''
+        Agent initialization of variables
+        '''
         raise NotImplementedError
         
     def agent_start(self, state):
+        '''
+        First action the agent ought to take
+        '''
         raise NotImplementedError
 
-    def agent_step(self, reward, state):
+    def agent_step(self, reward, state, cash_amount, coins_amount, current_price):
+        '''
+        The method that makes the agent take a step (choose an action)
+        '''
         raise NotImplementedError
 
     def agent_end(self, reward):
+        '''
+        The last action the agent ought to take
+        '''
         raise NotImplementedError
 
-    def agent_cleanup(self):        
+    def agent_cleanup(self):
+        '''
+        A method to clean every variables the agent used
+        '''
         raise NotImplementedError
         
     def agent_message(self, message):
+        '''
+        A method when the agent has to ping the user and tell him smthg
+        '''
         raise NotImplementedError
         
         
 class DumbAgent(BaseAgent):
-    def __init__(self):
+    '''
+    A very basic agent that chooses stupid actions
+    '''
+    def __init__(self, verbose=False):
+        '''
+        Class object initialization
+        '''
         self.last_action = None
         self.num_actions = 2
         self.q_values = [0.0 for _ in range(3)]
@@ -34,8 +59,15 @@ class DumbAgent(BaseAgent):
         self.epsilon = 0.1
         self.initial_value = 0.0
         self.arm_count = [0.0 for _ in range(10)]
+        self.last_state = None
+        self.rng_ = np.random.default_rng(seed=876438985230)
+
+        self.verbose_ = verbose
     
-    def agent_init(self,agent_info):
+    def agent_init(self, agent_info):
+        '''
+        Agent initialization
+        '''
         self.policy = agent_info.get("policy")
         self.discount = agent_info.get("discount")
         self.step_size = agent_info.get("step_size")
@@ -46,33 +78,55 @@ class DumbAgent(BaseAgent):
         self.epsilon = agent_info.get("epsilon", 0.0)
 
         self.last_action = 0
-        
-    def agent_start(self,state):
-        action = randint(0,2)
+
+    def agent_start(self, state):
+        '''
+        Choose agent's first action
+        '''
+        action = randint(0, 2)
         self.last_state = state
         self.last_action = action
         return action
       
-    def agent_step(self,reward,state,cash_amount,coins_amount,current_price):  
-        n = random()
+    def agent_step(self, reward, state, cash_amount, coins_amount, current_price):
+        '''
+        Agent takes a step i.e chooses an action.
+        Here, if we have enough cash to buy a coin, if the reward of the previous action
+        was superior to 1 we buy again with proba 1 - eps (or do nothing with proba eps)
+        otherwise, we we sell with proba 1 - eps, or do nothing with proba eps
+        '''
+        sample = self.rng_.random()
         if cash_amount < current_price:
-            print('not enough cash!') # si pas assez de cash pour acheter, on vend ou on ne fait rien avec proba 1/2
-            if n > 0.5:
-                action = 0
-            else: action = 2
+            if self.verbose_:
+                # si pas assez de cash pour acheter, on vend ou on ne fait rien avec proba 1/2
+                print('not enough cash!')
+            action = 0 if sample > 0.5 else 2
         else:
-            if reward >=1:
-                if n > self.epsilon:
-                    action = 1
-                else: action = 0
-            else: 
-                if n > self.epsilon:
-                    action = 2
-                else: action = 0
+            if reward >= 1:
+                action = 1 if sample > self.epsilon else 0
+            else:
+                action = 2 if sample > self.epsilon else 0
         return action
+
+    def agent_end(self, reward):
+        '''
+        The last action the agent ought to take
+        '''
+        return None
+
+    def agent_cleanup(self):
+        '''
+        A method to clean every variables the agent used
+        '''
+        return None
+        
+    def agent_message(self, message):
+        '''
+        A method when the agent has to ping the user and tell him smthg
+        '''
+        return None
         
 class EpsilonGreedyAgent(BaseAgent):
-    
     """agent does *no* learning, selects action 0 always"""
     def __init__(self):
         self.last_action = None
