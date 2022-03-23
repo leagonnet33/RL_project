@@ -1,5 +1,5 @@
-from utils import argmax
 import numpy as np
+from utils import argmax
 
 
 class BaseAgent:
@@ -7,7 +7,7 @@ class BaseAgent:
     The base agent class that needs to be overwritten.
     Can be used as info as what methods an agent should have.
     '''
-    def agent_init(self, agent_info={}):
+    def agent_init(self, agent_info: dict) -> None:
         '''
         Agent initialization of variables
         '''
@@ -56,11 +56,14 @@ class DumbAgent(BaseAgent):
         self.rng_ = np.random.default_rng(seed=876438985230)
         self.verbose_ = verbose
     
-    def agent_init(self, agent_info):
+    def agent_init(self, agent_info=None):
         '''
         Agent initialization
         '''
-        self.epsilon_ = agent_info.get("epsilon", 0.0)
+        if agent_info:
+            self.epsilon_ = agent_info.get("epsilon", 0.0)
+        else:
+            self.epsilon_ = 0.1
 
     def agent_start(self, state):
         '''
@@ -77,9 +80,9 @@ class DumbAgent(BaseAgent):
         '''
         sample = self.rng_.random()
         if reward >= 1:
-            return 1 if sample > self.epsilon_ else 0
+            return (1 if sample > self.epsilon_ else 0)
         else:
-            return 2 if sample > self.epsilon_ else 0
+            return (2 if sample > self.epsilon_ else 0)
 
     def agent_end(self, reward):
         '''
@@ -101,71 +104,76 @@ class DumbAgent(BaseAgent):
         
 class ArmCountAgent(BaseAgent):
     """
-    Agent that chooses its actions completely at r
+    Arm count agent
     """
     def __init__(self):
-        self.last_action = None
-        self.num_actions = 2
-        self.q_values = [0.0 for _ in range(3)]
-        self.step_size = 0.1
-        self.epsilon = 0.1
-        self.initial_value = 0.0
-        self.arm_count = [0.0 for _ in range(10)]
-    
-    def agent_init(self,agent_info):
-        self.policy = agent_info.get("policy")
-        self.discount = agent_info.get("discount")
-        self.step_size = agent_info.get("step_size")
-        
-        self.num_actions = agent_info.get("num_actions", 2)
-        self.initial_value = agent_info.get("initial_value", 0.0)
-        self.step_size = agent_info.get("step_size", 0.1)
-        self.epsilon = agent_info.get("epsilon", 0.0)
+        '''
+        Class object initialization
+        '''
+        self.last_state_ = None
+        self.last_action_ = None
+        self.num_actions = None
+        self.step_size_ = None
+        self.epsilon_ = None
+        self.initial_value_ = None
+        self.step_size_ = None
 
-        self.last_action = 0
+        self.rng_ = np.random.default_rng(seed=876438985230)
+
+        self.possible_actions_ = None
+        self.q_values = None
+        self.arm_count = None
+    
+    def agent_init(self, agent_info=None):
+        '''
+        Initialize the agent's variables
+        '''
+        if agent_info:
+            self.num_actions = agent_info.get("num_actions", 3)
+            self.step_size_ = agent_info.get("step_size", 0.1)
+            self.epsilon_ = agent_info.get("epsilon", 0.01)
+            self.initial_value_ = agent_info.get("initial_value", 0.0)
+            self.step_size_ = agent_info.get("step_size", .1)
+        else:
+            self.num_actions = 3
+            self.step_size_ = 0.1
+            self.epsilon_ = 0.01
+            self.initial_value_ = 0.0
+            self.step_size_ = .1
+
+        self.last_action_ = 0
+        self.possible_actions_ = [i for i in range(self.num_actions)]
+        self.q_values = [0.0 for _ in range(self.num_actions)]
+        self.arm_count = [0.0 for _ in range(self.num_actions)]
         
-    def agent_start(self,state):
-        action = randint(0,2)
-        self.last_state = state
-        self.last_action = action
+    def agent_start(self, state):
+        '''
+        First agent action
+        '''
+        action = self.rng_.integers(1, self.num_actions)
+        self.last_state_ = state
+        self.last_action_ = action
         return action
 
-    def agent_step(self,reward,state,cash_amount,coins_amount,current_price):
+    def agent_step(self, reward, state, cash_amount, coins_amount, current_price):
+        '''
+        Method for agent to choose an action to take epsilon-greedily
+        '''
+        self.arm_count[self.last_action_] += 1
+        self.q_values[self.last_action_] += (reward - self.q_values[self.last_action_]) / self.arm_count[self.last_action_]
         
-        self.arm_count[self.last_action] += 1
-        self.q_values[self.last_action] += (reward - self.q_values[self.last_action]) / self.arm_count[self.last_action]
-        
-        test = random()
-        
-        if cash_amount < current_price and int(coins_amount) == 0: # si on ne peut ni acheter ni vendre, on ne fait rien
-            current_action = 0 
-            
-        elif cash_amount < current_price and int(coins_amount) > 0: # si on ne peut pas acheter, on vend ou on ne fait rien
-            if test < 0.5: # avec probabilité 1/2
-                current_action = 0
-            else: current_action = 2
-                
-        elif cash_amount >= current_price and int(coins_amount) == 0: # si on ne peut pas vendre, on achète ou on ne fait rien
-            if test < 0.5: # avec probabilité 1/2
-                current_action = 0
-            else: current_action = 1
+        sample = self.rng_.random()
+        if sample < self.epsilon_:
+            current_action = self.rng_.choice(self.possible_actions_)
         else:
-            if test < self.epsilon:
-                n = len(self.q_values)
-                test = []
-                for i in range(n):
-                    test += [i]
-                current_action = np.random.choice(test)
-            else:
-                current_action = argmax(self.q_values)
+            current_action = argmax(self.rng_, self.q_values)
         
-        self.last_action = current_action
-        
+        self.last_action_ = current_action
         return current_action
     
     def agent_end(self, reward):
         target = reward
-        self.values[self.last_state] = self.values[self.last_state] + self.step_size * (target - self.values[self.last_state])
+        self.q_values[self.last_state_] = self.q_values[self.last_state_] + self.step_size_ * (target - self.q_values[self.last_state_])
     
     def agent_cleanup(self):
         '''
