@@ -1,6 +1,9 @@
 import numpy as np
 from utils import argmax
 
+import torch
+import torch.nn as nn
+
 
 class BaseAgent:
     '''
@@ -186,3 +189,62 @@ class ArmCountAgent(BaseAgent):
         A method when the agent has to ping the user and tell him smthg
         '''
         return None
+
+class DQNAgent():
+    '''
+    Our deep q-learning agent.
+    '''
+    def __init__(self, model, epsilon=.01, discount=.99, seed=876438985230):
+        '''
+        Initialize object
+        '''
+        torch.manual_seed(seed=seed)
+        self.rng_ = self.rng_ = np.random.default_rng(seed=seed)
+        self.num_actions_ = 3
+        
+        self.discount_ = discount
+        self.epsilon_ = epsilon
+        self.model = model
+        self.criterion_ = nn.MSELoss()
+        self.optim = torch.optim.Adam(self.model.parameters(), lr=0.005)
+
+    def step(self, state):
+        '''
+        The method that makes the agent take a step (choose an action)
+        '''
+        if self.rng_.random() < self.epsilon_:
+            return self.rng_.integers(self.num_actions_)
+        with torch.no_grad():
+            estimated_q = self.model(torch.from_numpy(state).float())
+            action = torch.argmax(estimated_q)
+            return action.item()
+
+    def train(self, batch):
+        '''
+        Takes a batch of states to train the model on
+        '''
+        batch_size = len(batch)
+        inputs = []
+        targets = []
+        
+        # Break down the 'batch' to build the inputs of the pytorch model
+        for idx in range(batch_size):
+            state, action, new_state, reward, is_done = batch[idx]
+            inputs.append(state)
+
+            # Compute target with updated q-value for best action
+            target = self.model(torch.from_numpy(state).float()).detach()
+            best_q = torch.max(self.model(torch.from_numpy(new_state).float())).detach()
+            target[action] = .0 if is_done else reward + self.discount_ * best_q
+            targets.append(target)
+
+        inputs = np.stack(inputs)
+        targets = np.stack(targets)
+
+        # Compute loss and back-propagate
+        y_pred = self.model(torch.from_numpy(inputs).float())
+        loss = self.criterion_(y_pred, torch.from_numpy(targets).float().detach())
+        self.optim.zero_grad()
+        loss.backward()
+        self.optim.step()
+        return loss.sum().item()
