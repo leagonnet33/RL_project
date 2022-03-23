@@ -52,41 +52,21 @@ class DumbAgent(BaseAgent):
         '''
         Class object initialization
         '''
-        self.last_action = None
-        self.num_actions = 2
-        self.q_values = [0.0 for _ in range(3)]
-        self.step_size = 0.1
-        self.epsilon = 0.1
-        self.initial_value = 0.0
-        self.arm_count = [0.0 for _ in range(10)]
-        self.last_state = None
+        self.epsilon_ = None
         self.rng_ = np.random.default_rng(seed=876438985230)
-
         self.verbose_ = verbose
     
     def agent_init(self, agent_info):
         '''
         Agent initialization
         '''
-        self.policy = agent_info.get("policy")
-        self.discount = agent_info.get("discount")
-        self.step_size = agent_info.get("step_size")
-        
-        self.num_actions = agent_info.get("num_actions", 2)
-        self.initial_value = agent_info.get("initial_value", 0.0)
-        self.step_size = agent_info.get("step_size", 0.1)
-        self.epsilon = agent_info.get("epsilon", 0.0)
-
-        self.last_action = 0
+        self.epsilon_ = agent_info.get("epsilon", 0.0)
 
     def agent_start(self, state):
         '''
         Choose agent's first action
         '''
-        action = self.rng_.integers(2)
-        self.last_state = state
-        self.last_action = action
-        return action
+        return self.rng_.integers(1, 3)
       
     def agent_step(self, reward, state, cash_amount, coins_amount, current_price):
         '''
@@ -97,9 +77,9 @@ class DumbAgent(BaseAgent):
         '''
         sample = self.rng_.random()
         if reward >= 1:
-            return 1 if sample > self.epsilon else 0
+            return 1 if sample > self.epsilon_ else 0
         else:
-            return 2 if sample > self.epsilon else 0
+            return 2 if sample > self.epsilon_ else 0
 
     def agent_end(self, reward):
         '''
@@ -119,8 +99,10 @@ class DumbAgent(BaseAgent):
         '''
         return None
         
-class EpsilonGreedyAgent(BaseAgent):
-    """agent does *no* learning, selects action 0 always"""
+class ArmCountAgent(BaseAgent):
+    """
+    Agent that chooses its actions completely at r
+    """
     def __init__(self):
         self.last_action = None
         self.num_actions = 2
@@ -184,3 +166,15 @@ class EpsilonGreedyAgent(BaseAgent):
     def agent_end(self, reward):
         target = reward
         self.values[self.last_state] = self.values[self.last_state] + self.step_size * (target - self.values[self.last_state])
+    
+    def agent_cleanup(self):
+        '''
+        A method to clean every variables the agent used
+        '''
+        return None
+        
+    def agent_message(self, message):
+        '''
+        A method when the agent has to ping the user and tell him smthg
+        '''
+        return None
