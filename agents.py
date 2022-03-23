@@ -83,7 +83,7 @@ class DumbAgent(BaseAgent):
         '''
         Choose agent's first action
         '''
-        action = randint(0, 2)
+        action = self.rng_.integers(2)
         self.last_state = state
         self.last_action = action
         return action
