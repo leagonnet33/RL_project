@@ -42,11 +42,12 @@ class Portfolio:
     The portfolio object. It is part of the environment and describes what the agent owns
     at every time step, mainly.
     '''
-    def __init__(self, num_coins_per_order=1., metrics=METRICS, verbose=False, final_price=0.0, spread=SPREAD):
+    def __init__(self, spending_limit=20_000, num_coins_per_order=1., metrics=METRICS, verbose=False, final_price=0.0, spread=SPREAD):
         self.verbose_ = verbose
         self.final_price_ = final_price
         self.portfolio_coin_ = 0.0
         self.portfolio_cash_ = 0.
+        self.spending_limit_ = spending_limit
         self.num_coins_per_order_ = num_coins_per_order
         self.metrics_ = metrics
         
@@ -121,6 +122,15 @@ class Portfolio:
  
         return coin_to_sell, sell_price
 
+    def __check_spending_limit(self, current_price):
+        '''
+        A method to make sure that we're not about to override the spending limit
+        we initially set
+        '''
+        buy_price = current_price * (1 + self.spread_)
+        should_proceed = (self.cash_used_ + buy_price) <= self.spending_limit_
+        return should_proceed
+
     def apply_action(self, current_price, action):
         '''
         A method to apply an action (either buy, sell or hold) to the portfolio and
@@ -135,10 +145,11 @@ class Portfolio:
 
         # BUY
         if action == 1:
-            coin_to_buy, _ = self.__buy(current_price)
-            if coin_to_buy <= 0:
-                # HOLD
-                action = 0
+            if self.__check_spending_limit(current_price):
+                coin_to_buy, _ = self.__buy(current_price)
+                if coin_to_buy <= 0:
+                    # HOLD
+                    action = 0
         # SELL
         elif action == 2:
             coin_to_sell, _ = self.__sell(current_price)
