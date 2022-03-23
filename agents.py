@@ -91,22 +91,15 @@ class DumbAgent(BaseAgent):
     def agent_step(self, reward, state, cash_amount, coins_amount, current_price):
         '''
         Agent takes a step i.e chooses an action.
-        Here, if we have enough cash to buy a coin, if the reward of the previous action
-        was superior to 1 we buy again with proba 1 - eps (or do nothing with proba eps)
-        otherwise, we we sell with proba 1 - eps, or do nothing with proba eps
+        Ff the reward of the previous action was superior to 1 we buy again with proba
+        1 - eps (or do nothing with proba eps) otherwise,
+        we we sell with proba 1 - eps, or do nothing with proba eps
         '''
         sample = self.rng_.random()
-        if cash_amount < current_price:
-            if self.verbose_:
-                # si pas assez de cash pour acheter, on vend ou on ne fait rien avec proba 1/2
-                print('not enough cash!')
-            action = 0 if sample > 0.5 else 2
+        if reward >= 1:
+            return 1 if sample > self.epsilon else 0
         else:
-            if reward >= 1:
-                action = 1 if sample > self.epsilon else 0
-            else:
-                action = 2 if sample > self.epsilon else 0
-        return action
+            return 2 if sample > self.epsilon else 0
 
     def agent_end(self, reward):
         '''
