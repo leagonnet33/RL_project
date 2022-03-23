@@ -53,6 +53,7 @@ class TradingBotEnv(BaseEnv):
         ### Derive some new features from the data
         self.rolling_mean_ = self.market_data_["open"].rolling(window=self.lookback_window_size_, center=False, min_periods=0).mean()
         self.rolling_std_ = self.market_data_["open"].rolling(window=self.lookback_window_size_, center=False, min_periods=0).std()
+        self.rolling_std_ = self.rolling_std_.fillna(value=self.rolling_std_.iloc[1])
         self.upper_band_, self.lower_band_ = self.rolling_mean_ + 2 * self.rolling_std_, self.rolling_mean_ - 2 * self.rolling_std_
 
         ### Create the state dictionnary
