@@ -22,10 +22,10 @@ def run_agent(agent, environment, portfolio):
             print(f"Reward: {environment.get_reward(action)}\n")
             print(f"Current Price: {environment.get_current_price()}\n")
 
-        current_price = environment.get_price_at(i)
+        current_price = environment.get_current_price()
         current_cash = portfolio.portfolio_cash_
         current_coins = portfolio.portfolio_coin_
-        action = agent.agent_step(current_reward,state,current_cash,current_coins,current_price)
+        action = agent.agent_step(current_reward, state, current_cash, current_coins, current_price)
 
         # Save in history to watch later
         history["cash"].append(current_cash)

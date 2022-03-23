@@ -28,13 +28,6 @@ class BasePortfolio:
         A method to reset the portfolio
         '''
         raise NotImplementedError
-    
-    # reward defintion
-    def get_reward(self):
-        '''
-        A method to return the reward to the user
-        '''
-        raise NotImplementedError
 
     def apply_action(self, current_price, action):
         '''
@@ -49,11 +42,11 @@ class Portfolio:
     The portfolio object. It is part of the environment and describes what the agent owns
     at every time step, mainly.
     '''
-    def __init__(self, portfolio_cash = 5000, num_coins_per_order=1., metrics=METRICS, verbose=False, final_price=0.0, spread=SPREAD):
+    def __init__(self, num_coins_per_order=1., metrics=METRICS, verbose=False, final_price=0.0, spread=SPREAD):
         self.verbose_ = verbose
         self.final_price_ = final_price
         self.portfolio_coin_ = 0.0
-        self.portfolio_cash_ = portfolio_cash
+        self.portfolio_cash_ = 0.
         self.num_coins_per_order_ = num_coins_per_order
         self.metrics_ = metrics
         
@@ -68,7 +61,6 @@ class Portfolio:
         self.bought_price_ = 0.0
         self.cash_used_ = 0.0
         self.spread_ = spread # 1 bps
-        self.reward_ = None
     
     def __get_current_value(self, current_price):
         '''
@@ -100,7 +92,6 @@ class Portfolio:
 
         self.portfolio_coin_ += coin_to_buy
         self.cash_used_ += coin_to_buy * buy_price
-        self.portfolio_cash_ -= coin_to_buy * buy_price
 
         if self.verbose_:
             print(f"coin to buy: {coin_to_buy}, coin now: {self.portfolio_coin_}, cash now: {self.portfolio_cash_}, cash used now: {self.cash_used_}")
@@ -141,26 +132,17 @@ class Portfolio:
 
         if self.verbose_:
             print("Action start", action, "Total value before action", self.state_dict_["total_value"])
-        
-        # Reward for HOLD
-        self.reward_ = self.__get_current_value(self.final_price_) - self.state_dict_["total_value"]
 
         # BUY
         if action == 1:
-            coin_to_buy, buy_price = self.__buy(current_price)
-            if coin_to_buy > 0:
-                self.bought_price_ = buy_price
-                # Reward for BUY
-                self.reward_ = self.__get_current_value(self.final_price_) - self.state_dict_["total_value"] - self.spread_ * current_price * coin_to_buy - self.cash_used_
-            else:
+            coin_to_buy, _ = self.__buy(current_price)
+            if coin_to_buy <= 0:
                 # HOLD
                 action = 0
         # SELL
         elif action == 2:
             coin_to_sell, _ = self.__sell(current_price)
-            if coin_to_sell > 0:
-                self.reward_ = self.state_dict_["total_value"] - self.cash_used_
-            else:
+            if coin_to_sell <= 0:
                 # HOLD
                 action = 0
         
@@ -170,9 +152,6 @@ class Portfolio:
         self.state_dict_["total_value"] = self.__get_current_value(current_price)
         self.state_dict_["is_holding_coin"] = (self.portfolio_coin_ > 0) * 1
         self.state_dict_["return_since_entry"] = self.__get_returns_percent(current_price)
-        
-        # if self.verbose_:
-        #     print("Action end:", action, "Reward:", self.get_reward())
             
         return action
 
@@ -189,15 +168,6 @@ class Portfolio:
         if not metrics:
             metrics = self.metrics_
         return np.array([self.state_dict_[metric] for metric in metrics])
-    
-    def get_reward(self):
-        '''
-        A method to return the reward.
-        THIS METHOD WILL PROBABLY BE USELESS.
-        '''
-        if self.cash_used_ == 0.0:
-            return 0.0
-        return (self.__get_current_value(self.final_price_) - self.cash_used_)/self.cash_used_
 
     def get_current_holdings(self, current_price):
         '''
