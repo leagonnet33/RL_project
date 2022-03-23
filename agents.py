@@ -19,7 +19,7 @@ class BaseAgent:
         '''
         raise NotImplementedError
 
-    def agent_step(self, reward, state, cash_amount, coins_amount, current_price):
+    def agent_step(self, reward, state):
         '''
         The method that makes the agent take a step (choose an action)
         '''
@@ -71,7 +71,7 @@ class DumbAgent(BaseAgent):
         '''
         return self.rng_.integers(1, 3)
       
-    def agent_step(self, reward, state, cash_amount, coins_amount, current_price):
+    def agent_step(self, reward, state):
         '''
         Agent takes a step i.e chooses an action.
         Ff the reward of the previous action was superior to 1 we buy again with proba
@@ -155,7 +155,7 @@ class ArmCountAgent(BaseAgent):
         self.last_action_ = action
         return action
 
-    def agent_step(self, reward, state, cash_amount, coins_amount, current_price):
+    def agent_step(self, reward, state):
         '''
         Method for agent to choose an action to take epsilon-greedily
         '''
