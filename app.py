@@ -5,15 +5,26 @@ witness their performances.
 from loader import TradingDataLoader
 from environments import TradingBotEnv
 from portfolio import Portfolio
-from agents import DumbAgent
-from trainers import run_agent
+from models import DenseModel
+from agents import DQNAgent
+from runners import test_dqn_agent, train_dqn_agent
+import pickle as pk
 
 data = TradingDataLoader().data()
 environment = TradingBotEnv(data)
 portfolio = Portfolio()
-agent = DumbAgent()
 
-history = run_agent(agent, environment, portfolio)
+input_dimension = len(environment.metrics_) + len(portfolio.metrics_)
+output_dimension = 3
 
-print(history["cash"][:5])
-print(history["coins"][:5])
+# model = DenseModel(input_dimension=input_dimension, output_dimension=output_dimension)
+with open('./models/first_dqn.pkl', 'rb') as f:
+    pickler = pk.Unpickler(f)
+    model = pickler.load()
+
+agent = DQNAgent(model)
+
+# train_dqn_agent(agent, environment, portfolio, save='./models/first_dqn.pkl')
+history = test_dqn_agent(agent, environment, portfolio)
+
+print(history[-10:])
