@@ -8,6 +8,7 @@ def run_agent(agent, environment, portfolio):
     '''
     history = {"cash": [], "coins": []}
     is_done = False
+    agent.agent_init()
     action = agent.agent_start(state=None)
     i = 0
     while not is_done:
