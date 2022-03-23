@@ -13,4 +13,7 @@ environment = TradingBotEnv(data)
 portfolio = Portfolio()
 agent = DumbAgent()
 
-run_agent(agent, environment, portfolio)
+history = run_agent(agent, environment, portfolio)
+
+print(history["cash"][:5])
+print(history["coins"][:5])
