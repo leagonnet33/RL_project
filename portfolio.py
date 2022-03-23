@@ -63,20 +63,20 @@ class Portfolio:
         self.cash_used_ = 0.0
         self.spread_ = spread # 1 bps
     
-    def __get_current_value(self, current_price):
+    def get_current_value(self, current_price):
         '''
         Private method to get the current total value of the portfolio
         '''
         sell_price = current_price * (1 - self.spread_)
         return self.portfolio_coin_ * sell_price + self.portfolio_cash_
 
-    def __get_returns_percent(self, current_price):
+    def get_returns_percent(self, current_price):
         '''
         A private method that return the returns since the experiment started
         '''
         if self.cash_used_ == 0.0:
             return 0.0
-        return 100 * (self.__get_current_value(current_price) - self.cash_used_) / self.cash_used_
+        return 100 * (self.get_current_value(current_price) - self.cash_used_) / self.cash_used_
 
     def __buy(self, current_price):
         '''
@@ -138,7 +138,7 @@ class Portfolio:
         '''
         assert action in [0, 1, 2], "Action should be one of: 0, 1 or 2"
 
-        self.state_dict_["total_value"] = self.__get_current_value(current_price)
+        self.state_dict_["total_value"] = self.get_current_value(current_price)
 
         if self.verbose_:
             print("Action start", action, "Total value before action", self.state_dict_["total_value"])
@@ -160,9 +160,9 @@ class Portfolio:
         # Update states
         self.state_dict_["coin"] = self.portfolio_coin_
         self.state_dict_["cash"] = self.portfolio_cash_
-        self.state_dict_["total_value"] = self.__get_current_value(current_price)
+        self.state_dict_["total_value"] = self.get_current_value(current_price)
         self.state_dict_["is_holding_coin"] = (self.portfolio_coin_ > 0) * 1
-        self.state_dict_["return_since_entry"] = self.__get_returns_percent(current_price)
+        self.state_dict_["return_since_entry"] = self.get_returns_percent(current_price)
             
         return action
 
@@ -170,7 +170,7 @@ class Portfolio:
         '''
         A method to reset the portfolio
         '''
-        self.__init__(num_coins_per_order=self.num_coins_per_order_, metrics=self.metrics_, verbose=self.verbose_, final_price=self.final_price_)
+        self.__init__(spending_limit=self.spending_limit_, num_coins_per_order=self.num_coins_per_order_, metrics=self.metrics_, verbose=self.verbose_, final_price=self.final_price_, spread=self.spread_)
         
     def get_states(self, metrics=None):
         '''
@@ -184,7 +184,7 @@ class Portfolio:
         '''
         A method that returns a string describing the current position of the portfolio
         '''
-        return f"{self.portfolio_coin_: .2f} coins, {self.portfolio_cash_: .2f} cash, {self.__get_current_value(current_price): .2f} current value, {self.__get_returns_percent(current_price): .2f}% returns"
+        return f"{self.portfolio_coin_: .2f} coins, {self.portfolio_cash_: .2f} cash, {self.get_current_value(current_price): .2f} current value, {self.get_returns_percent(current_price): .2f}% returns"
 
 
 if __name__ == "__main__":
