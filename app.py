@@ -8,6 +8,7 @@ from portfolio import Portfolio
 from models import DenseModel
 from agents import DQNAgent
 from runners import test_dqn_agent, train_dqn_agent
+from plot_functions import plot_results
 import pickle as pk
 
 data = TradingDataLoader().data()
