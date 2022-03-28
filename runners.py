@@ -45,9 +45,10 @@ def train_dqn_agent(agent, environment, portfolio, episodes=10, batch_size=32, m
     '''
     assert max_memory_size >= batch_size, "The maximum memory size must be superior to the batch size"
     random_gen = np.random.default_rng(seed=seed)
-    data_to_plot = {}
+
+    portfolio_history = {}
     for episode in range(episodes):
-        data_to_plot[episode] = []
+        portfolio_history[episode] = []
         _, _ = environment.reset(), portfolio.reset()
         i, processed_samples, tot_loss, is_done, memory = 0, 0, 0., False, []
 
@@ -77,8 +78,8 @@ def train_dqn_agent(agent, environment, portfolio, episodes=10, batch_size=32, m
             # Update state and action
             state = new_state
             
-            # Save the current price in the data to plot
-            data_to_plot[episode].append(portfolio.get_current_value(current_price))
+            # Save the current portfolio value in history
+            portfolio_history[episode].append(portfolio.get_current_value(current_price))
 
             if len(memory) > max_memory_size:
                 memory.pop(random_gen.integers(max_memory_size))
@@ -105,7 +106,7 @@ def train_dqn_agent(agent, environment, portfolio, episodes=10, batch_size=32, m
             pickler = pk.Pickler(f)
             pickler.dump(agent.model)
             
-    return data_to_plot
+    return portfolio_history
 
 def test_dqn_agent(agent, environment, portfolio):
     '''
