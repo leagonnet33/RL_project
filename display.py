@@ -1,27 +1,44 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm.notebook import tqdm
-from runners import test_dqn_agent, train_dqn_agent
-from models import DenseModel
+from utils import generate_rgb_color
 
+def plot_history_against_xchange_rates(history, xchange_data, color_seed=866549187):
+    '''
+    A function that plots the history of portfolio values for all epsiodes
+    against the values of the exchange rate
+    '''
+    random_gen = np.random.default_rng(seed=color_seed)
 
-def plot_results(agent,environment,portfolio,episodes=10):
-    data_to_plot_all = {}
-    for episode in range (1,episodes+1):
-        data_to_plot_all[episode] = []
-    data_to_plot = train_dqn_agent(agent, environment, portfolio, episodes)
-    for episode in range (1,len(data_to_plot)):
-        data_to_plot_all[episode].append(data_to_plot[episode])
-        
-    for episode in tqdm(range(1,len(data_to_plot)+1)):
-        plt.plot(np.mean(data_to_plot_all[episode],axis=0),label=episode)
-    plt.xlabel("Time")
-    plt.ylabel("Portfolio\n current\n value\n (USD)",rotation=0, labelpad=40)
-    plt.xlim(0,9000)
-    plt.ylim(0,100000)
-    plt.title('Portfolio current value at each episode')
-    plt.legend()
+    # Get xchange useful data
+    dates = xchange_data.index
+    exchange_rates = xchange_data['open']
+
+    # Primary plot
+    _, ax1 = plt.subplots()
+    for episode, values in history.items():
+        ax1.plot(dates[::24], values[::24], color=generate_rgb_color(random_gen), linewidth=1, label=f"episode {episode + 1}")
+
+    ax1.set_xlabel("Time")
+    ax1.set_ylabel("Portfolio value (USD)", rotation=90, labelpad=40)
+    ax1.legend()
+
+    # Secondary plot
+    ax2 = ax1.twinx()
+    ax2.plot(np.arange(dates[::24].shape[0]), exchange_rates[::24], color="black", label="X-change rate", linestyle='dashed')
+    ax2.set_ylabel("X-change rate", rotation=270, labelpad=40)
+    ax2.legend()
+
+    plt.title('Portfolio value evolution through episodes against xchange rates')
+    plt.xticks([])
     plt.show()
-    
 
-    
+if __name__ =="__main__":
+    import pickle as pk
+    from loader import TradingDataLoader
+
+    data = TradingDataLoader().data()
+    with open('./training_history/temp.pkl', "rb") as f:
+        pickler = pk.Unpickler(f)
+        portfolio_history = pickler.load()
+
+    plot_history_against_xchange_rates(portfolio_history, data)
