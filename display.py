@@ -15,8 +15,12 @@ def plot_history_against_xchange_rates(history, xchange_data, color_seed=8665491
 
     # Primary plot
     _, ax1 = plt.subplots()
-    for episode, values in history.items():
-        ax1.plot(dates[::24], values[::24], color=generate_rgb_color(random_gen), linewidth=1, label=f"episode {episode + 1}")
+
+    if isinstance(history, dict):
+        for episode, values in history.items():
+            ax1.plot(dates[::24], values[::24], color=generate_rgb_color(random_gen), linewidth=1, label=f"episode {episode + 1}")
+    else:
+        ax1.plot(dates[::24], history[::24], color=generate_rgb_color(random_gen), linewidth=1, label=f"Test episode")
 
     ax1.set_xlabel("Time")
     ax1.set_ylabel("Portfolio value (USD)", rotation=90, labelpad=40)

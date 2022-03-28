@@ -8,25 +8,22 @@ from portfolio import Portfolio
 from models import DenseModel
 from agents import DQNAgent
 from runners import test_dqn_agent, train_dqn_agent
-from plot_functions import plot_results
+from display import plot_history_against_xchange_rates
 import pickle as pk
 
 data = TradingDataLoader().data()
 environment = TradingBotEnv(data)
 portfolio = Portfolio()
 
-input_dimension = len(environment.metrics_) + len(portfolio.metrics_)
-output_dimension = 3
+# input_dimension = len(environment.metrics_) + len(portfolio.metrics_)
+# output_dimension = 3
+# model = DenseModel(input_dimension=input_dimension, output_dimension=output_dimension)
+# agent = DQNAgent(model)
 
-model = DenseModel(input_dimension=input_dimension, output_dimension=output_dimension)
-#with open('./models/first_dqn.pkl', 'rb') as f:
-#    pickler = pk.Unpickler(f)
-#    model = pickler.load()
+with open('./models/first_dqn.pkl', "rb") as f:
+    pickler = pk.Unpickler(f)
+    model = pickler.load()
 
 agent = DQNAgent(model)
-plot_results(agent,environment,portfolio)
-
-# train_dqn_agent(agent, environment, portfolio, save='./models/first_dqn.pkl')
-#history = test_dqn_agent(agent, environment, portfolio)
-
-#print(history[-10:])
+portfolio_history = test_dqn_agent(agent, environment, portfolio)
+plot_history_against_xchange_rates(portfolio_history, data)
