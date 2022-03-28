@@ -112,7 +112,7 @@ def test_dqn_agent(agent, environment, portfolio):
     '''
     A function to run a dqn agent through a whole episode
     '''
-    value_history = []
+    portfolio_history = []
     _, _ = environment.reset(), portfolio.reset()
     i, is_done = 0, False
 
@@ -125,7 +125,7 @@ def test_dqn_agent(agent, environment, portfolio):
         action = agent.step(state)
 
         current_price = environment.get_current_price()
-        value_history.append(portfolio.get_current_value(current_price))
+        portfolio_history.append(portfolio.get_current_value(current_price))
         
         # Update the portfolio and retrieve the new state
         portfolio.apply_action(current_price, action)
@@ -140,4 +140,4 @@ def test_dqn_agent(agent, environment, portfolio):
         i += 1
 
     print(f"\nEPISODE OVER: {portfolio.get_current_holdings(current_price)}")
-    return value_history
+    return portfolio_history
