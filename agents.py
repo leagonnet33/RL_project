@@ -198,7 +198,6 @@ class DQNAgent():
         '''
         Initialize object
         '''
-        torch.manual_seed(seed=seed)
         self.rng_ = self.rng_ = np.random.default_rng(seed=seed)
         self.num_actions_ = 3
         
