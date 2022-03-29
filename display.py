@@ -2,7 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils import generate_rgb_color
 
-def plot_history_against_xchange_rates(history, xchange_data, investment_return="NC", color_seed=866549187):
+def plot_history_against_xchange_rates(
+    history,
+    xchange_data,
+    investment_return="NC",
+    color_seed=866549187,
+    save_path=None):
     '''
     A function that plots the history of portfolio values for all epsiodes
     against the values of the exchange rate
@@ -34,6 +39,10 @@ def plot_history_against_xchange_rates(history, xchange_data, investment_return=
 
     plt.title(f'Portfolio val and xchange rates - ROI: {investment_return: .2f}%')
     plt.xticks([])
+
+    if save_path:
+        plt.savefig(save_path)
+        
     plt.show()
 
 if __name__ =="__main__":
