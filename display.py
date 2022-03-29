@@ -5,7 +5,7 @@ from utils import generate_rgb_color
 def plot_history_against_xchange_rates(
     history,
     xchange_data,
-    investment_return="NC",
+    investment_return=.0,
     color_seed=866549187,
     save_path=None):
     '''
@@ -42,7 +42,7 @@ def plot_history_against_xchange_rates(
 
     if save_path:
         plt.savefig(save_path)
-        
+
     plt.show()
 
 if __name__ =="__main__":
