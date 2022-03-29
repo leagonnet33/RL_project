@@ -26,4 +26,5 @@ with open('./models/first_dqn.pkl', "rb") as f:
 
 agent = DQNAgent(model)
 portfolio_history = test_dqn_agent(agent, environment, portfolio)
-plot_history_against_xchange_rates(portfolio_history, data)
+investment_return = portfolio.get_returns_percent(environment.get_current_price())
+plot_history_against_xchange_rates(portfolio_history, data, investment_return)
